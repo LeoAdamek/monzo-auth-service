@@ -1,0 +1,115 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: go1.x
+    Timeout: 10
+    Tracing: Active
+    KmsKeyArn: !GetAtt ParameterKey.Arn
+    Environment:
+      Variables:
+        TABLE_NAME: !Ref Tokens
+
+        # Replace this with your own domain
+        RETURN_URL: https://monzo-auth.adamek.io/return
+
+        # Replace this with your own OAuth Client ID
+        OAuthClientID: oauthclient_00009TP3eNmTK294KsB7ir
+
+        ## Note: This value was encrypted using `ParameterKey`
+        ## You will need to deploy the service, encrypt your OAuth secret, put it here, and then re-deploy
+        OAuthClientSecret: AQICAHg4xpNzGnSULS2b7M474Iq8uk96FmIAXPfwaPSxMJXOIQFrgnbEh7QPtEtSEkG2Is81AAAAtjCBswYJKoZIhvcNAQcGoIGlMIGiAgEAMIGcBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDDbs1zC+HCdF0v1emwIBEIBvFxsoFy4734HuEMhv8LMoCwGW/1iuHNfqDjcsFTTf3yliSNcCGIVHVBQJ2Wd2UK3u2+dN/lcoQIIuLw94x6zxX5jIun6XgdcGv7GhJ1rjars8zq+dgVgtbJ0+BYfTGmg2wnShIPkTQ0SsadHdcopK
+
+Resources:
+
+  CreateToken:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ./bin/createToken
+      Runtime: go1.x
+      CodeUri: .
+      Policies:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+           - dynamodb:PutItem
+          Resource: !GetAtt Tokens.Arn
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: get
+
+  Return:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ./bin/return
+      Runtime: go1.x
+      CodeUri: .
+      Policies:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - dynamodb.GetItem
+          Resource: !GetAtt Tokens.Arn
+        Events:
+          Api:
+            Type: Api
+            Properties:
+              Path: /return
+              Method: get
+
+  Tokens:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 4
+        WriteCapacityUnits: 4
+
+  ParameterKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: >
+        KMS Key for securing secrets used by Monzo Auth Service
+      Enabled: yes
+      EnableKeyRotation: no
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: monzo-service-key-policy
+        Statement:
+
+
+         # You'll want to change replace these admin policies with your own IAM users.
+         - Sid: "Allow administration of the key"
+           Effect: "Allow"
+           Resource: '*'
+           Principal:
+             AWS: arn:aws:iam::280427722663:user/kitsune
+           Action:
+             - "kms:*"
+         - Sid: "Allow administration of the key"
+           Effect: "Allow"
+           Resource: '*'
+           Principal:
+             AWS: arn:aws:iam::280427722663:user/leo.adamek
+           Action:
+             - "kms:*"
+
+         - Sid: "KeyUseByFunctions"
+           Effect: Allow
+           Principal:
+             AWS: !GetAtt CreateTokenRole.Arn
+           Action:
+            - kms:Encrypt
+            - kms:Decrypt
+            - kms:ReEncrypt*
+            - kms:GenerateDataKey*
+            - kms:DescribeKey
+           Resource: '*'
