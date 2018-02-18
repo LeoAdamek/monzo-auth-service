@@ -6,10 +6,7 @@ import "github.com/satori/go.uuid"
 // Token represents the session token
 type Token struct {
 	ID string `json:"id"`
-	
-	Token string `json:"token"`
-	StateToken string `json:"-"`
-	
+	AuthCode string `json:"auth_code,omitempty"`
 	LoginURL string `json:"login_url"`
 }
 

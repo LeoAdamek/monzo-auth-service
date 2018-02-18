@@ -7,6 +7,9 @@ Globals:
     Timeout: 10
     Tracing: Active
     KmsKeyArn: !GetAtt ParameterKey.Arn
+
+    # Note: Most of these Environment vars do not need to be shared.
+    # Only OauthClientID and TABLE_NAME need to be shared between functions.
     Environment:
       Variables:
         TABLE_NAME: !Ref Tokens
@@ -34,13 +37,13 @@ Resources:
         Statement:
           Effect: Allow
           Action:
-           - dynamodb:PutItem
+            - dynamodb:PutItem
           Resource: !GetAtt Tokens.Arn
       Events:
         Api:
           Type: Api
           Properties:
-            Path: /token
+            Path: /new
             Method: get
 
   Return:
@@ -54,14 +57,36 @@ Resources:
         Statement:
           Effect: Allow
           Action:
-            - dynamodb.GetItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
           Resource: !GetAtt Tokens.Arn
-        Events:
-          Api:
-            Type: Api
-            Properties:
-              Path: /return
-              Method: get
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /return
+            Method: get
+
+  GetToken:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: ./bin/getToken
+      Runtime: go1.x
+      CodeUri: .
+      Policies:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action:
+            - dynamodb:GetItem
+            - dynamodb:DeleteItem
+          Resource: !GetAtt Tokens.Arn
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: /token
+            Method: get
 
   Tokens:
     Type: AWS::Serverless::SimpleTable
@@ -70,8 +95,8 @@ Resources:
         Name: id
         Type: String
       ProvisionedThroughput:
-        ReadCapacityUnits: 4
-        WriteCapacityUnits: 4
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 
   ParameterKey:
     Type: AWS::KMS::Key
@@ -105,7 +130,7 @@ Resources:
          - Sid: "KeyUseByFunctions"
            Effect: Allow
            Principal:
-             AWS: !GetAtt CreateTokenRole.Arn
+             AWS: !GetAtt GetTokenRole.Arn
            Action:
             - kms:Encrypt
             - kms:Decrypt

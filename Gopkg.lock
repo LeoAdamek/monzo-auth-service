@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/averagesecurityguy/random"
-  packages = ["."]
-  revision = "115af05019c1551a078e92c68f17ebfb351d1d5c"
-
-[[projects]]
   name = "github.com/aws/aws-lambda-go"
   packages = [
     "events",
@@ -101,6 +95,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c81052c2631b4d5cf1e3a875291393696192605f3656fe0ff76556948db01650"
+  inputs-digest = "2bb993c485cacea71a43f5a81b00f85a6428418addbf895181d2b296807c7626"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -12,13 +12,13 @@ This section covers how to use the service to get request tokens.
 ### Request a token:
 
 ````http request
-GET https://mzauth.breakerofthings.solutions/request
+GET https://monzo-auth.adamek.io/new
 ````
 
 Response will contain a token request/session ID:
 
 ````json
-{"request_id": "TOKEN_REQ_ID", "login_url": "a_url_here"}
+{"id": "TOKEN_REQ_ID", "login_url": "a_url_here"}
 ````
 
 The user should be directed to open the url given by `login_url` to authenticate.
@@ -28,7 +28,7 @@ The user should be directed to open the url given by `login_url` to authenticate
 You can then poll the service to see if the token is available:
 
 ````http request
-GET https://mzauth.breakerofthings.solutions/token?id=YOUR_TOKEN_ID
+GET https://monzo-auth.adamek.io/token?id=TOKEN_REQ_ID
 ````
 
 If the user has authenticated and been redirected to get their token, you should get the following:
@@ -40,4 +40,6 @@ If the user has authenticated and been redirected to get their token, you should
 }
 ````
 
-**Important**: Once a token has been presented, it is destroyed from the auth service.
+**Important**: Tokens are _not_ stored in the service. The single-use Authorization code is held
+until a token reterevial request is received, at which point it is exchanged with Monzo for an access token which is
+passed directly to the caller.
