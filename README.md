@@ -32,21 +32,21 @@ You will need to edit the following values in `template.yaml`
 
 Build the binaries:
 
-  $ make clean build
+    $ make clean build
   
 Upload the package:
 
-  $ sam package --template-file template.yaml --s3-bucket $YOUR_S3_BUCKET --output-template-file packaged.yaml
+    $ sam package --template-file template.yaml --s3-bucket $YOUR_S3_BUCKET --output-template-file packaged.yaml
   
 Deploy:
 
-  $ sam deploy --template-file ./packaged.yaml --stack-name monzo-auth-service
+    $ sam deploy --template-file ./packaged.yaml --stack-name monzo-auth-service
   
 Wait a few minutes, it may take a while on first run.
 
 Encrypt your OAuth Client Secret:
 
-  $ aws kms encrypt --key-id generated_kms_key_id --plaintext $YOUR_MONZO_OAUTH_SECRET
+    $ aws kms encrypt --key-id generated_kms_key_id --plaintext $YOUR_MONZO_OAUTH_SECRET
   
 Set the `OAuthClientSecret` to the value of the `CipherTextBlob` and then re-run the package and deploy steps.
 
